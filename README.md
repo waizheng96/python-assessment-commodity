@@ -204,3 +204,4 @@ Same lightweight scaffold approach as the other domain variants in this program:
 ---
 
 *Domain variant of the FXPulse brief ([assessment-treasury](../assessment-treasury/ASSESSMENT-BRIEF.md)) — same rubric weights and technical constraints, different entity, scoping concept (per-trader watchlist isolation vs. role-gating), and business rules (desk-dependent thresholds, 5/10-day moving averages) so this cannot be trivially copied from the other domain. See [python-training-revised.md](../python-training-revised.md) and [python-learning-guide.md](../python-learning-guide.md) for the surrounding program context.*
+# python-assessment-commodity
