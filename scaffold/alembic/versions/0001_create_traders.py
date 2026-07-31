@@ -7,13 +7,14 @@ Create Date: 2024-01-01 00:00:01
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import ENUM as PGEnum
 
 revision = "0001"
 down_revision = None
 branch_labels = None
 depends_on = None
 
-desk_enum = sa.Enum("metals", "energy", "agriculture", name="desk_enum")
+desk_enum = PGEnum("metals", "energy", "agriculture", name="desk_enum", create_type=False)
 
 
 def upgrade() -> None:

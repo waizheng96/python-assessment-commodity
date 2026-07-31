@@ -16,6 +16,11 @@ app.include_router(alerts.router, prefix="/alerts", tags=["alerts"])
 app.include_router(reports.router, prefix="/reports", tags=["reports"])
 
 
+@app.get("/")
+def read_root():
+    return {"status": "ok", "message": "Commodity Watch API"}
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}

@@ -1,84 +1,128 @@
 from datetime import date, datetime
-from typing import Optional
+from decimal import Decimal
+from typing import Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TODO: Complete each Pydantic schema below.
-#
 # Naming convention:
 #   <Entity>Create — fields accepted on POST
 #   <Entity>Update — fields accepted on PUT (all optional)
 #   <Entity>Out     — fields returned in responses (config: from_attributes=True)
 # ─────────────────────────────────────────────────────────────────────────────
 
+Desk = Literal["metals", "energy", "agriculture"]
+
 
 # ── Trader ───────────────────────────────────────────────────────────────────
 class TraderCreate(BaseModel):
-    # TODO: name: str, email: EmailStr, desk: str (one of "metals","energy","agriculture")
-    pass
+    name: str
+    email: EmailStr
+    desk: Desk
 
 
 class TraderUpdate(BaseModel):
-    # TODO: all fields optional — name, email, desk, active
-    pass
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    desk: Optional[Desk] = None
+    active: Optional[bool] = None
 
 
 class TraderOut(BaseModel):
-    # TODO: id, name, email, desk, active, created_at
-    class Config:
-        from_attributes = True
+    id: int
+    name: str
+    email: str
+    desk: Desk
+    active: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ── Commodity ────────────────────────────────────────────────────────────────
 class CommodityOut(BaseModel):
-    # TODO: id, symbol, name, unit, desk, is_active
-    class Config:
-        from_attributes = True
+    id: int
+    symbol: str
+    name: str
+    unit: str
+    desk: Desk
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ── Price Snapshot ───────────────────────────────────────────────────────────
 class PriceSnapshotCreate(BaseModel):
-    # TODO: price: float (must be > 0 — enforce in the router), captured_at: datetime, source: str
-    pass
+    price: Decimal
+    captured_at: datetime
+    source: str
+
+    @field_validator("price")
+    @classmethod
+    def price_must_be_positive(cls, v: Decimal) -> Decimal:
+        if v <= 0:
+            raise ValueError("price must be greater than 0")
+        return v
 
 
 class PriceSnapshotOut(BaseModel):
-    # TODO: id, commodity_id, price, captured_at, source
-    class Config:
-        from_attributes = True
+    id: int
+    commodity_id: int
+    price: Decimal
+    captured_at: datetime
+    source: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ── Watchlist ────────────────────────────────────────────────────────────────
 class WatchlistItemCreate(BaseModel):
-    # TODO: commodity_id: int
-    pass
+    commodity_id: int
 
 
 class WatchlistItemOut(BaseModel):
-    # TODO: id, trader_id, commodity_id, added_at
-    class Config:
-        from_attributes = True
+    id: int
+    trader_id: int
+    commodity_id: int
+    added_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ── Price Alert ──────────────────────────────────────────────────────────────
 class PriceAlertOut(BaseModel):
-    # TODO: id, commodity_id, price_snapshot_id, pct_change, threshold_used,
-    #       threshold_breached, created_at
-    class Config:
-        from_attributes = True
+    id: int
+    commodity_id: int
+    price_snapshot_id: int
+    pct_change: Decimal
+    threshold_used: Decimal
+    threshold_breached: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ── Report ───────────────────────────────────────────────────────────────────
 class ReportCreate(BaseModel):
-    # TODO: date_from: date, date_to: date
-    # Note: unlike the treasury domain, this does NOT take an explicit
-    # commodity/pair list — the report always covers the requesting trader's
-    # current watchlist (see FR-4.3 in ASSESSMENT-BRIEF.md).
-    pass
+    date_from: date
+    date_to: date
+
+    @field_validator("date_to")
+    @classmethod
+    def date_to_after_date_from(cls, v: date, info) -> date:
+        date_from = info.data.get("date_from")
+        if date_from is not None and v < date_from:
+            raise ValueError("date_to must be on or after date_from")
+        return v
 
 
 class ReportOut(BaseModel):
-    # TODO: id, trader_id, date_from, date_to, filename, row_count, generated_at
-    class Config:
-        from_attributes = True
+    id: int
+    trader_id: int
+    date_from: date
+    date_to: date
+    filename: str
+    row_count: int
+    generated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

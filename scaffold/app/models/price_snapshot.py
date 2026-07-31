@@ -1,26 +1,27 @@
-from app.database import Base
+from datetime import datetime
+from decimal import Decimal
 
-# ─────────────────────────────────────────────────────────────────────────────
-# TODO: Define the `price_snapshots` table.
-#
-# Columns:
-#   id             — Integer, primary key
-#   commodity_id   — Integer, ForeignKey("commodities.id"), not null
-#   price          — Numeric(12, 4), not null
-#   captured_at    — DateTime, not null
-#   source         — String(100), not null
-#
-# Also add:
-#   commodity = relationship("Commodity", back_populates="price_snapshots")
-#   alert = relationship("PriceAlert", back_populates="price_snapshot", uselist=False)
-#
-# BUSINESS RULE (enforced in the router, not here): a new snapshot's
-# captured_at must be later than the commodity's most recent existing snapshot.
-# ─────────────────────────────────────────────────────────────────────────────
+from sqlalchemy import DateTime, ForeignKey, Numeric, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.database import Base
 
 
 class PriceSnapshot(Base):
     __tablename__ = "price_snapshots"
 
-    # TODO: columns and relationships go here
-    pass
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    commodity_id: Mapped[int] = mapped_column(
+        ForeignKey("commodities.id", ondelete="CASCADE"), nullable=False
+    )
+    price: Mapped[Decimal] = mapped_column(Numeric(12, 4), nullable=False)
+    captured_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    source: Mapped[str] = mapped_column(String(100), nullable=False)
+
+    commodity = relationship("Commodity", back_populates="price_snapshots")
+    alert = relationship(
+        "PriceAlert",
+        back_populates="price_snapshot",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )

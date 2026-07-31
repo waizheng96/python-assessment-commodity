@@ -1,28 +1,27 @@
-from app.database import Base
+from datetime import datetime
 
-# ─────────────────────────────────────────────────────────────────────────────
-# TODO: Define the `watchlist_items` table (junction table — the domain-unique
-# scoping concept for this assessment: each trader's watchlist is isolated
-# from every other trader's).
-#
-# Columns:
-#   id             — Integer, primary key
-#   trader_id      — Integer, ForeignKey("traders.id"), not null
-#   commodity_id   — Integer, ForeignKey("commodities.id"), not null
-#   added_at       — DateTime, not null, server default now()
-#   UniqueConstraint(trader_id, commodity_id)
-#
-# Also add:
-#   trader = relationship("Trader", back_populates="watchlist_items")
-#   commodity = relationship("Commodity", back_populates="watchlist_items")
-#
-# BUSINESS RULE (enforced in the router, not here): GET /watchlist must only
-# ever return the requesting trader's own rows — never another trader's.
-# ─────────────────────────────────────────────────────────────────────────────
+from sqlalchemy import DateTime, ForeignKey, UniqueConstraint, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.database import Base
 
 
 class WatchlistItem(Base):
     __tablename__ = "watchlist_items"
+    __table_args__ = (
+        UniqueConstraint("trader_id", "commodity_id", name="uq_watchlist_trader_commodity"),
+    )
 
-    # TODO: columns and relationships go here
-    pass
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    trader_id: Mapped[int] = mapped_column(
+        ForeignKey("traders.id", ondelete="CASCADE"), nullable=False
+    )
+    commodity_id: Mapped[int] = mapped_column(
+        ForeignKey("commodities.id", ondelete="CASCADE"), nullable=False
+    )
+    added_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+
+    trader = relationship("Trader", back_populates="watchlist_items")
+    commodity = relationship("Commodity", back_populates="watchlist_items")

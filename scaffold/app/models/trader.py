@@ -1,24 +1,25 @@
-from app.database import Base
+from datetime import datetime
 
-# ─────────────────────────────────────────────────────────────────────────────
-# TODO: Define the `traders` table.
-#
-# Columns:
-#   id          — Integer, primary key
-#   name        — String(100), not null
-#   email       — String(150), not null, unique
-#   desk        — Enum("metals", "energy", "agriculture"), not null
-#   active      — Boolean, not null, default True
-#   created_at  — DateTime, not null, server default now()
-#
-# Also add:
-#   watchlist_items = relationship("WatchlistItem", back_populates="trader")
-#   reports = relationship("Report", back_populates="trader")
-# ─────────────────────────────────────────────────────────────────────────────
+from sqlalchemy import Boolean, DateTime, Enum, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.database import Base
+from app.models._enums import DeskEnum
 
 
 class Trader(Base):
     __tablename__ = "traders"
 
-    # TODO: columns and relationships go here
-    pass
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    email: Mapped[str] = mapped_column(String(150), nullable=False, unique=True)
+    desk: Mapped[str] = mapped_column(DeskEnum, nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+
+    watchlist_items = relationship(
+        "WatchlistItem", back_populates="trader", cascade="all, delete-orphan"
+    )
+    reports = relationship("Report", back_populates="trader", cascade="all, delete-orphan")
